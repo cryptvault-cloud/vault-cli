@@ -74,5 +74,17 @@ docker_manifests:
       - "ghcr.io/cryptvault-cloud/vault-cli:latest-arm64"
 
 release:
-changelog:
-  disable: true
+changelog: 
+  use: github
+  groups:
+    - title: Features
+      regexp: '^.*?feat(\([[:word:]]+\))??!?:.+$'
+      order: 0
+    - title: 'Bug fixes'
+      regexp: '^.*?fix(\([[:word:]]+\))??!?:.+$'
+      order: 1
+    - title: 'Refactor'
+      regexp: '^.*?refactor(\([[:word:]]+\))??!?:.+$'
+      order: 2
+    - title: Others
+      order: 999
