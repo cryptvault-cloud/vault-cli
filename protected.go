@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"crypto/ecdsa"
 	"errors"
 	"fmt"
@@ -11,7 +12,7 @@ import (
 
 	client "github.com/cryptvault-cloud/api"
 	"github.com/cryptvault-cloud/helper"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 )
 
 type ProtectedRunner struct {
@@ -50,21 +51,21 @@ func GetProtectedCommand(runner *Runner) *cli.Command {
 			&cli.StringFlag{
 				Name:     CliProtectedHandlerKey,
 				Aliases:  []string{"creds"},
-				EnvVars:  []string{getFlagEnvByFlagName(CliProtectedHandlerKey)},
+				Sources:  cli.EnvVars(getFlagEnvByFlagName(CliProtectedHandlerKey)),
 				Usage:    "Private key wich have rights to handle subcommand or path to private key ",
 				Required: true,
 			},
 			&cli.StringFlag{
 				Name:    CliProtectedVaultId,
-				EnvVars: []string{getFlagEnvByFlagName(CliProtectedVaultId)},
+				Sources: cli.EnvVars(getFlagEnvByFlagName(CliProtectedVaultId)),
 				Usage:   "vaultid to handle subcommand",
 			},
 		},
-		Subcommands: []*cli.Command{
+		Commands: []*cli.Command{
 			{
 				Name:  "add",
 				Usage: "add new value or identity",
-				Subcommands: []*cli.Command{
+				Commands: []*cli.Command{
 					{
 						Name:   "identity",
 						Usage:  "add a new identity",
@@ -72,13 +73,13 @@ func GetProtectedCommand(runner *Runner) *cli.Command {
 						Flags: []cli.Flag{
 							&cli.StringFlag{
 								Name:     CliAddIdentityName,
-								EnvVars:  []string{getFlagEnvByFlagName(CliAddIdentityName)},
+								Sources:  cli.EnvVars(getFlagEnvByFlagName(CliAddIdentityName)),
 								Usage:    "Name of identity",
 								Required: true,
 							},
 							&cli.StringFlag{
 								Name:     CliAddIdentityPublicKey,
-								EnvVars:  []string{getFlagEnvByFlagName(CliAddIdentityPublicKey)},
+								Sources:  cli.EnvVars(getFlagEnvByFlagName(CliAddIdentityPublicKey)),
 								Usage:    "If set, no new key pair will created, it will use this public key as identity base",
 								Value:    "",
 								Required: false,
@@ -86,9 +87,9 @@ func GetProtectedCommand(runner *Runner) *cli.Command {
 							&cli.StringSliceFlag{
 								Name:    CliAddIdentityRights,
 								Aliases: []string{"r"},
-								EnvVars: []string{getFlagEnvByFlagName(CliAddIdentityRights)},
+								Sources: cli.EnvVars(getFlagEnvByFlagName(CliAddIdentityRights)),
 								Usage:   "Rights for the new identity",
-								Action: func(ctx *cli.Context, s []string) error {
+								Action: func(ctx context.Context, c *cli.Command, s []string) error {
 									var err error = nil
 									for _, one := range s {
 										if !ValuePatternRegex.Match([]byte(one)) {
@@ -107,17 +108,17 @@ func GetProtectedCommand(runner *Runner) *cli.Command {
 						Flags: []cli.Flag{
 							&cli.StringFlag{
 								Name:    CliAddValueName,
-								EnvVars: []string{getFlagEnvByFlagName(CliAddValueName)},
+								Sources: cli.EnvVars(getFlagEnvByFlagName(CliAddValueName)),
 								Usage:   "Key of value",
 							},
 							&cli.StringFlag{
 								Name:    CliAddValuePassframe,
-								EnvVars: []string{getFlagEnvByFlagName(CliAddValuePassframe)},
+								Sources: cli.EnvVars(getFlagEnvByFlagName(CliAddValuePassframe)),
 								Usage:   "Password of value",
 							},
 							&cli.StringFlag{
 								Name:    CliAddValueType,
-								EnvVars: []string{getFlagEnvByFlagName(CliAddValueType)},
+								Sources: cli.EnvVars(getFlagEnvByFlagName(CliAddValueType)),
 								Usage:   "type of value String or JSON",
 								Value:   "String",
 							},
@@ -129,7 +130,7 @@ func GetProtectedCommand(runner *Runner) *cli.Command {
 			{
 				Name:  "get",
 				Usage: "Get Secrets, Identity",
-				Subcommands: []*cli.Command{
+				Commands: []*cli.Command{
 					{
 						Name:   "identity",
 						Usage:  "returns information over identity ",
@@ -137,7 +138,7 @@ func GetProtectedCommand(runner *Runner) *cli.Command {
 						Flags: []cli.Flag{
 							&cli.StringFlag{
 								Name:     CliGetIdentityId,
-								EnvVars:  []string{getFlagEnvByFlagName(CliGetIdentityId)},
+								Sources:  cli.EnvVars(getFlagEnvByFlagName(CliGetIdentityId)),
 								Usage:    "IdentityId to looking for",
 								Required: true,
 							},
@@ -150,7 +151,7 @@ func GetProtectedCommand(runner *Runner) *cli.Command {
 						Flags: []cli.Flag{
 							&cli.StringFlag{
 								Name:     CliGetValueName,
-								EnvVars:  []string{getFlagEnvByFlagName(CliGetValueName)},
+								Sources:  cli.EnvVars(getFlagEnvByFlagName(CliGetValueName)),
 								Usage:    "Value name something like VALUES.a.b",
 								Required: true,
 							},
@@ -162,7 +163,7 @@ func GetProtectedCommand(runner *Runner) *cli.Command {
 				Name:    "ls",
 				Aliases: []string{"list"},
 				Usage:   "List multiple information creds identity",
-				Subcommands: []*cli.Command{
+				Commands: []*cli.Command{
 					{
 						Name:   "values",
 						Usage:  "show all keys of all related values",
@@ -178,7 +179,7 @@ func GetProtectedCommand(runner *Runner) *cli.Command {
 			{
 				Name:  "update",
 				Usage: "Update Secrets, Identities",
-				Subcommands: []*cli.Command{
+				Commands: []*cli.Command{
 					{
 						Name:   "value",
 						Usage:  "update a value and set new secret",
@@ -186,19 +187,19 @@ func GetProtectedCommand(runner *Runner) *cli.Command {
 						Flags: []cli.Flag{
 							&cli.StringFlag{
 								Name:     CliUpdateValueName,
-								EnvVars:  []string{getFlagEnvByFlagName(CliUpdateValueName)},
+								Sources:  cli.EnvVars(getFlagEnvByFlagName(CliUpdateValueName)),
 								Usage:    "Key of value",
 								Required: true,
 							},
 							&cli.StringFlag{
 								Name:     CliUpdateValuePassframe,
-								EnvVars:  []string{getFlagEnvByFlagName(CliUpdateValuePassframe)},
+								Sources:  cli.EnvVars(getFlagEnvByFlagName(CliUpdateValuePassframe)),
 								Usage:    "Password of value",
 								Required: true,
 							},
 							&cli.StringFlag{
 								Name:    CliUpdateValueType,
-								EnvVars: []string{getFlagEnvByFlagName(CliUpdateValueType)},
+								Sources: cli.EnvVars(getFlagEnvByFlagName(CliUpdateValueType)),
 								Usage:   "type of value String or JSON",
 								Value:   "String",
 							},
@@ -211,21 +212,21 @@ func GetProtectedCommand(runner *Runner) *cli.Command {
 						Flags: []cli.Flag{
 							&cli.StringFlag{
 								Name:     CliUpdateIdentityId,
-								EnvVars:  []string{getFlagEnvByFlagName(CliUpdateIdentityId)},
+								Sources:  cli.EnvVars(getFlagEnvByFlagName(CliUpdateIdentityId)),
 								Usage:    "id of identity",
 								Required: true,
 							},
 							&cli.StringFlag{
 								Name:    CliUpdateIdentityName,
-								EnvVars: []string{getFlagEnvByFlagName(CliUpdateIdentityName)},
+								Sources: cli.EnvVars(getFlagEnvByFlagName(CliUpdateIdentityName)),
 								Usage:   "Name of identity",
 							},
 							&cli.StringSliceFlag{
 								Name:    CliUpdateIdentityRightsAdd,
 								Aliases: []string{"ra"},
-								EnvVars: []string{getFlagEnvByFlagName(CliUpdateIdentityRightsAdd)},
+								Sources: cli.EnvVars(getFlagEnvByFlagName(CliUpdateIdentityRightsAdd)),
 								Usage:   "Rights for the identity to add",
-								Action: func(ctx *cli.Context, s []string) error {
+								Action: func(ctx context.Context, c *cli.Command, s []string) error {
 									var err error = nil
 									for _, one := range s {
 										if !ValuePatternRegex.Match([]byte(one)) {
@@ -238,9 +239,9 @@ func GetProtectedCommand(runner *Runner) *cli.Command {
 							&cli.StringSliceFlag{
 								Name:    CliUpdateIdentityRightsRemove,
 								Aliases: []string{"rd"},
-								EnvVars: []string{getFlagEnvByFlagName(CliUpdateIdentityRightsRemove)},
+								Sources: cli.EnvVars(getFlagEnvByFlagName(CliUpdateIdentityRightsRemove)),
 								Usage:   "Rights for the identity to remove",
-								Action: func(ctx *cli.Context, s []string) error {
+								Action: func(ctx context.Context, c *cli.Command, s []string) error {
 									var err error = nil
 									for _, one := range s {
 										if !ValuePatternRegex.Match([]byte(one)) {
@@ -257,7 +258,7 @@ func GetProtectedCommand(runner *Runner) *cli.Command {
 			{
 				Name:  "delete",
 				Usage: "Get Secrets, Identity",
-				Subcommands: []*cli.Command{
+				Commands: []*cli.Command{
 					{
 						Name:   "vault",
 						Usage:  "Delete an empty vault",
@@ -270,7 +271,7 @@ func GetProtectedCommand(runner *Runner) *cli.Command {
 						Flags: []cli.Flag{
 							&cli.StringFlag{
 								Name:     CliDeleteIdentityId,
-								EnvVars:  []string{getFlagEnvByFlagName(CliDeleteIdentityId)},
+								Sources:  cli.EnvVars(getFlagEnvByFlagName(CliDeleteIdentityId)),
 								Usage:    "ID of identity",
 								Required: true,
 							},
@@ -283,7 +284,7 @@ func GetProtectedCommand(runner *Runner) *cli.Command {
 						Flags: []cli.Flag{
 							&cli.StringFlag{
 								Name:     CliDeleteValueName,
-								EnvVars:  []string{getFlagEnvByFlagName(CliDeleteValueName)},
+								Sources:  cli.EnvVars(getFlagEnvByFlagName(CliDeleteValueName)),
 								Usage:    "Name of value to delete",
 								Required: true,
 							},
@@ -300,7 +301,7 @@ func GetProtectedCommand(runner *Runner) *cli.Command {
 	}
 }
 
-func (r *ProtectedRunner) Before(c *cli.Context) error {
+func (r *ProtectedRunner) Before(ctx context.Context, c *cli.Command) (context.Context, error) {
 	pemKeyOrPath := c.String(CliProtectedHandlerKey)
 	pemKey := ""
 	if _, err := os.Stat(pemKeyOrPath); errors.Is(err, os.ErrNotExist) {
@@ -309,32 +310,32 @@ func (r *ProtectedRunner) Before(c *cli.Context) error {
 	} else {
 		t, err := r.runner.fileHandler.ReadTextFile(pemKeyOrPath)
 		if err != nil {
-			return err
+			return ctx, err
 		}
 		pemKey = t
 	}
 	privKey, err := helper.GetPrivateKeyFromB64String(pemKey)
 	if err != nil {
-		return err
+		return ctx, err
 	}
 	vaultId := c.String(CliProtectedVaultId)
 	if vaultId == "" {
 		vault, err := r.runner.fileHandler.SelectedVault()
 		if err != nil {
-			return err
+			return ctx, err
 		}
 		vaultId, err = r.runner.fileHandler.ReadTextFile(fmt.Sprintf("%s/vaultId", vault))
 		if err != nil {
-			return err
+			return ctx, err
 		}
 	}
 	r.privateKey = privKey
 	r.vaultId = &vaultId
 
 	r.api = r.runner.api.GetProtectedApi(privKey, vaultId)
-	return nil
+	return ctx, nil
 }
-func (r *ProtectedRunner) ListAllIdentities(c *cli.Context) error {
+func (r *ProtectedRunner) ListAllIdentities(ctx context.Context, c *cli.Command) error {
 
 	identityResult, err := r.api.GetAllIdentities()
 	if err != nil {
@@ -350,7 +351,7 @@ func (r *ProtectedRunner) ListAllIdentities(c *cli.Context) error {
 	return nil
 }
 
-func (r *ProtectedRunner) ListRelatedValues(c *cli.Context) error {
+func (r *ProtectedRunner) ListRelatedValues(ctx context.Context, c *cli.Command) error {
 	b64pub, err := helper.NewBase64PublicPem(&r.privateKey.PublicKey)
 	if err != nil {
 		return err
@@ -373,7 +374,7 @@ func (r *ProtectedRunner) ListRelatedValues(c *cli.Context) error {
 	}
 	return nil
 }
-func (r *ProtectedRunner) AddValue(c *cli.Context) error {
+func (r *ProtectedRunner) AddValue(ctx context.Context, c *cli.Command) error {
 	valueType := c.String(CliAddValueType)
 	if !helper.Includes(AllValueType, func(v ValueType) bool { return valueType == string(v) }) {
 		return fmt.Errorf("not allowed Type")
@@ -387,7 +388,7 @@ func (r *ProtectedRunner) AddValue(c *cli.Context) error {
 	return nil
 }
 
-func (r *ProtectedRunner) UpdateValue(c *cli.Context) error {
+func (r *ProtectedRunner) UpdateValue(ctx context.Context, c *cli.Command) error {
 	valueType := c.String(CliAddValueType)
 	if !helper.Includes(AllValueType, func(v ValueType) bool { return valueType == string(v) }) {
 		return fmt.Errorf("not allowed Type")
@@ -425,7 +426,7 @@ func getRightInputs(rights []string) ([]*client.RightInput, error) {
 	return rightInputs, errs
 }
 
-func (r *ProtectedRunner) UpdateIdentity(c *cli.Context) error {
+func (r *ProtectedRunner) UpdateIdentity(ctx context.Context, c *cli.Command) error {
 	rightsAdd := c.StringSlice(CliUpdateIdentityRightsAdd)
 	rightsRemove := c.StringSlice(CliUpdateIdentityRightsRemove)
 	name := c.String(CliUpdateIdentityName)
@@ -522,7 +523,7 @@ func (r *ProtectedRunner) UpdateIdentity(c *cli.Context) error {
 	return nil
 }
 
-func (r *ProtectedRunner) AddIdentity(c *cli.Context) error {
+func (r *ProtectedRunner) AddIdentity(ctx context.Context, c *cli.Command) error {
 	rights := c.StringSlice(CliAddIdentityRights)
 	name := c.String(CliAddIdentityName)
 	b64pubKey := c.String(CliAddIdentityPublicKey)
@@ -582,7 +583,7 @@ func (r *ProtectedRunner) AddIdentity(c *cli.Context) error {
 
 }
 
-func (r *ProtectedRunner) GetIdentity(c *cli.Context) error {
+func (r *ProtectedRunner) GetIdentity(ctx context.Context, c *cli.Command) error {
 	id := c.String(CliGetIdentityId)
 	res, err := r.api.GetIdentity(id)
 	if err != nil {
@@ -599,7 +600,7 @@ func (r *ProtectedRunner) GetIdentity(c *cli.Context) error {
 	return nil
 }
 
-func (r *ProtectedRunner) GetValue(c *cli.Context) error {
+func (r *ProtectedRunner) GetValue(ctx context.Context, c *cli.Command) error {
 	name := c.String(CliGetValueName)
 	value, err := r.api.GetValueByName(name)
 	if err != nil {
@@ -617,7 +618,7 @@ func (r *ProtectedRunner) GetValue(c *cli.Context) error {
 	return nil
 }
 
-func (r *ProtectedRunner) GenerateAuthToken(c *cli.Context) error {
+func (r *ProtectedRunner) GenerateAuthToken(ctx context.Context, c *cli.Command) error {
 	jwt, err := helper.SignJWT(r.privateKey, *r.vaultId)
 	if err != nil {
 		return err
@@ -626,7 +627,7 @@ func (r *ProtectedRunner) GenerateAuthToken(c *cli.Context) error {
 	return nil
 }
 
-func (r *ProtectedRunner) DeleteVault(c *cli.Context) error {
+func (r *ProtectedRunner) DeleteVault(ctx context.Context, c *cli.Command) error {
 
 	err := r.api.DeleteVault(*r.vaultId)
 	if err != nil {
@@ -637,7 +638,7 @@ func (r *ProtectedRunner) DeleteVault(c *cli.Context) error {
 
 }
 
-func (r *ProtectedRunner) DeleteIdentity(c *cli.Context) error {
+func (r *ProtectedRunner) DeleteIdentity(ctx context.Context, c *cli.Command) error {
 	vaultName, err := r.runner.fileHandler.SelectedVault()
 	if err != nil {
 		return err
@@ -660,7 +661,7 @@ func (r *ProtectedRunner) DeleteIdentity(c *cli.Context) error {
 	return nil
 }
 
-func (r *ProtectedRunner) DeleteValue(c *cli.Context) error {
+func (r *ProtectedRunner) DeleteValue(ctx context.Context, c *cli.Command) error {
 	nameOfValue2Delete := c.String(CliDeleteValueName)
 	value, err := r.api.GetValueByName(nameOfValue2Delete)
 	if err != nil {

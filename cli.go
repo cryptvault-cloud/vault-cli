@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"errors"
 	"fmt"
 	"log"
@@ -14,7 +15,7 @@ import (
 	client "github.com/cryptvault-cloud/api"
 	"github.com/cryptvault-cloud/helper"
 	"github.com/cryptvault-cloud/vault-cli/logger"
-	"github.com/urfave/cli/v2"
+	"github.com/urfave/cli/v3"
 	"github.com/vektah/gqlparser/v2/gqlerror"
 )
 
@@ -64,31 +65,32 @@ func cliRunner() {
 
 	runner := Runner{}
 
-	app := &cli.App{
-		Usage:   "vault-cli",
-		Version: fmt.Sprintf("%s [%s]", version, commit),
+	app := &cli.Command{
+		EnableShellCompletion: true,
+		Usage:                 "vault-cli",
+		Version:               fmt.Sprintf("%s [%s]", version, commit),
 		Flags: []cli.Flag{
 			&cli.StringFlag{
 				Name:    CliLogLevel,
-				EnvVars: []string{getFlagEnvByFlagName(CliLogLevel)},
+				Sources: cli.EnvVars(getFlagEnvByFlagName(CliLogLevel)),
 				Value:   "info",
 				Usage:   "Loglevel debug, info, warn, error",
 			},
 			&cli.StringFlag{
 				Name:    CliServerUrl,
-				EnvVars: []string{getFlagEnvByFlagName(CliServerUrl)},
+				Sources: cli.EnvVars(getFlagEnvByFlagName(CliServerUrl)),
 				Value:   "https://api.cryptvault.cloud/query",
 				Usage:   "Endpoint where api is running",
 			},
 			&cli.BoolFlag{
 				Name:    CliSaveToFile,
-				EnvVars: []string{getFlagEnvByFlagName(CliSaveToFile)},
+				Sources: cli.EnvVars(getFlagEnvByFlagName(CliSaveToFile)),
 				Usage:   "Should created information be saved to a folder structure",
 				Value:   true,
 			},
 			&cli.StringFlag{
 				Name:    CliSaveFilePath,
-				EnvVars: []string{getFlagEnvByFlagName(CliSaveFilePath)},
+				Sources: cli.EnvVars(getFlagEnvByFlagName(CliSaveFilePath)),
 				Value:   "./.cryptvault/",
 				Usage:   "Path to folder where to save all created data",
 			},
@@ -98,7 +100,7 @@ func cliRunner() {
 			{
 				Name:  "local",
 				Usage: "To handle with local files",
-				Subcommands: []*cli.Command{
+				Commands: []*cli.Command{
 					{
 						Name:   "init",
 						Usage:  "create a local workspace for an already exist Vault",
@@ -121,7 +123,7 @@ func cliRunner() {
 
 					{
 						Name: "add",
-						Subcommands: []*cli.Command{
+						Commands: []*cli.Command{
 							{
 								Name:        "identity-by-private-key",
 								Usage:       "add a identity local to the file structure. ",
@@ -145,7 +147,7 @@ func cliRunner() {
 					},
 					{
 						Name: "create",
-						Subcommands: []*cli.Command{
+						Commands: []*cli.Command{
 							{
 								Name:        "identity",
 								Usage:       "create a new identity key pair without register at vault.cloud. ",
@@ -154,7 +156,7 @@ func cliRunner() {
 								Flags: []cli.Flag{
 									&cli.StringFlag{
 										Name:     CliCreateIdentityLocalName,
-										EnvVars:  []string{getFlagEnvByFlagName(CliCreateIdentityLocalName)},
+										Sources:  cli.EnvVars(getFlagEnvByFlagName(CliCreateIdentityLocalName)),
 										Usage:    "Name of identity ",
 										Value:    "",
 										Required: true,
@@ -194,14 +196,14 @@ func cliRunner() {
 				Flags: []cli.Flag{
 					&cli.StringFlag{
 						Name:     CliCreateVaultVaultName,
-						EnvVars:  []string{getFlagEnvByFlagName(CliCreateVaultVaultName)},
+						Sources:  cli.EnvVars(getFlagEnvByFlagName(CliCreateVaultVaultName)),
 						Aliases:  []string{"vault-name"},
 						Required: true,
 						Usage:    "Name of the new Vault to init",
 					},
 					&cli.StringFlag{
 						Name:     CliCreateVaultVaultToken,
-						EnvVars:  []string{getFlagEnvByFlagName(CliCreateVaultVaultToken)},
+						Sources:  cli.EnvVars(getFlagEnvByFlagName(CliCreateVaultVaultToken)),
 						Aliases:  []string{"token"},
 						Required: true,
 						Usage:    "Token to verify vault generation is allowed",
@@ -211,7 +213,7 @@ func cliRunner() {
 			GetProtectedCommand(&runner),
 		},
 	}
-	if err := app.Run(os.Args); err != nil {
+	if err := app.Run(context.Background(), os.Args); err != nil {
 		if gqlErr, ok := err.(gqlerror.List); ok {
 			for i, err := range gqlErr {
 				fmt.Printf("Error %d:\n", i+1)
@@ -235,7 +237,7 @@ type Runner struct {
 	fileHandler FileHandling
 }
 
-func (r *Runner) LocalListVault(c *cli.Context) error {
+func (r *Runner) LocalListVault(ctx context.Context, c *cli.Command) error {
 	vaults, err := r.fileHandler.AvailableVaults()
 	if err != nil {
 		return err
@@ -246,7 +248,7 @@ func (r *Runner) LocalListVault(c *cli.Context) error {
 	return nil
 }
 
-func (r *Runner) LocalSelectedVault(c *cli.Context) error {
+func (r *Runner) LocalSelectedVault(ctx context.Context, c *cli.Command) error {
 	t, err := r.fileHandler.SelectedVault()
 	if err != nil {
 		return err
@@ -255,7 +257,7 @@ func (r *Runner) LocalSelectedVault(c *cli.Context) error {
 	return nil
 }
 
-func (r *Runner) LocalSelectVault(c *cli.Context) error {
+func (r *Runner) LocalSelectVault(ctx context.Context, c *cli.Command) error {
 	vaultName := c.String("vault")
 	vaults, err := r.fileHandler.AvailableVaults()
 	if err != nil {
@@ -268,7 +270,7 @@ func (r *Runner) LocalSelectVault(c *cli.Context) error {
 	}
 }
 
-func (r *Runner) Before(c *cli.Context) error {
+func (r *Runner) Before(ctx context.Context, c *cli.Command) (context.Context, error) {
 	_, err := logger.Initialize(c.String(CliLogLevel))
 
 	r.api = client.NewApi(c.String(CliServerUrl), http.DefaultClient)
@@ -278,16 +280,16 @@ func (r *Runner) Before(c *cli.Context) error {
 		}
 		err = r.fileHandler.Init()
 		if err != nil {
-			return err
+			return ctx, err
 		}
 	} else {
 		r.fileHandler = &FileHandlerMock{}
 	}
 
-	return err
+	return ctx, err
 }
 
-func (r *Runner) init_vault(c *cli.Context) error {
+func (r *Runner) init_vault(ctx context.Context, c *cli.Command) error {
 	vaultName := c.String(CliInitVaultName)
 	vaultID := c.String(CliInitVaultId)
 	var err error = nil
@@ -302,7 +304,7 @@ func (r *Runner) init_vault(c *cli.Context) error {
 	return nil
 }
 
-func (r *Runner) create_local_identity(c *cli.Context) error {
+func (r *Runner) create_local_identity(ctx context.Context, c *cli.Command) error {
 	name := c.String(CliCreateIdentityLocalName)
 	privKey, pubKey, err := r.api.GetNewIdentityKeyPair()
 	if err != nil {
@@ -341,7 +343,7 @@ func (r *Runner) create_local_identity(c *cli.Context) error {
 
 }
 
-func (r *Runner) add_identity(c *cli.Context) error {
+func (r *Runner) add_identity(ctx context.Context, c *cli.Command) error {
 	private_key_str := c.String(CliAddIdentityLocalPrivateKey)
 	name := c.String(CliAddIdentityLocalName)
 	key, err := helper.GetPrivateKeyFromB64String(private_key_str)
@@ -380,7 +382,7 @@ func (r *Runner) add_identity(c *cli.Context) error {
 	return nil
 }
 
-func (r *Runner) create_vault(c *cli.Context) error {
+func (r *Runner) create_vault(ctx context.Context, c *cli.Command) error {
 	vaultName := c.String(CliCreateVaultVaultName)
 	privKey, pubKey, vaultID, err := r.api.NewVault(vaultName, c.String(CliCreateVaultVaultToken))
 	if err != nil {
