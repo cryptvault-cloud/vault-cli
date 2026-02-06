@@ -266,7 +266,7 @@ func (r *Runner) LocalSelectVault(ctx context.Context, c *cli.Command) error {
 	if helper.Includes[string](vaults, func(s string) bool { return s == vaultName }) {
 		return r.fileHandler.SaveTextToFile("/currentVault.txt", vaultName)
 	} else {
-		return fmt.Errorf("Vault not found... ")
+		return fmt.Errorf("vault not found... ")
 	}
 }
 

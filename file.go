@@ -31,14 +31,14 @@ func (f *FileHandlerMock) SaveTextToFile(filePath string, content string) error 
 	return nil
 }
 func (f *FileHandlerMock) ReadTextFile(filePath string) (string, error) {
-	return "", fmt.Errorf("Not found")
+	return "", fmt.Errorf("not found")
 }
 
 func (f *FileHandlerMock) AvailableVaults() ([]string, error) {
 	return []string{}, nil
 }
 func (f *FileHandlerMock) SelectedVault() (string, error) {
-	return "", fmt.Errorf("Not found")
+	return "", fmt.Errorf("not found")
 }
 
 func (f *FileHandlerMock) DeleteFolder(filePath string) error {

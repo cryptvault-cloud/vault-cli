@@ -93,7 +93,7 @@ func GetProtectedCommand(runner *Runner) *cli.Command {
 									var err error = nil
 									for _, one := range s {
 										if !ValuePatternRegex.Match([]byte(one)) {
-											err = errors.Join(fmt.Errorf("Have to match right string pattern: %s", helper.ValuePatternRegexStr))
+											err = errors.Join(fmt.Errorf("have to match right string pattern: %s", helper.ValuePatternRegexStr))
 										}
 									}
 									return err
@@ -230,7 +230,7 @@ func GetProtectedCommand(runner *Runner) *cli.Command {
 									var err error = nil
 									for _, one := range s {
 										if !ValuePatternRegex.Match([]byte(one)) {
-											err = errors.Join(fmt.Errorf("Have to match right string pattern: %s", helper.ValuePatternRegexStr))
+											err = errors.Join(fmt.Errorf("have to match right string pattern: %s", helper.ValuePatternRegexStr))
 										}
 									}
 									return err
@@ -245,7 +245,7 @@ func GetProtectedCommand(runner *Runner) *cli.Command {
 									var err error = nil
 									for _, one := range s {
 										if !ValuePatternRegex.Match([]byte(one)) {
-											err = errors.Join(fmt.Errorf("Have to match right string pattern: %s", helper.ValuePatternRegexStr))
+											err = errors.Join(fmt.Errorf("have to match right string pattern: %s", helper.ValuePatternRegexStr))
 										}
 									}
 									return err
@@ -461,7 +461,7 @@ func (r *ProtectedRunner) UpdateIdentity(ctx context.Context, c *cli.Command) er
 				return fmt.Sprintf("(%s)%s", value.Right[:1], value.RightValuePattern) == fmt.Sprintf("(%s)%s", toCheck.Right[:1], toCheck.RightValuePattern)
 			})
 			if !containsRight {
-				return fmt.Errorf("Right to remove %s was not found at current identity rights", fmt.Sprintf("(%s)%s", r.Right[:1], r.RightValuePattern))
+				return fmt.Errorf("right to remove %s was not found at current identity rights", fmt.Sprintf("(%s)%s", r.Right[:1], r.RightValuePattern))
 			} else {
 				currentRights = helper.Filter(currentRights, func(value *client.RightInput) bool {
 					return fmt.Sprintf("(%s)%s", value.Right[:1], value.RightValuePattern) != fmt.Sprintf("(%s)%s", r.Right[:1], r.RightValuePattern)
