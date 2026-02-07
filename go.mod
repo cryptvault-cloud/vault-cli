@@ -3,8 +3,8 @@ module github.com/cryptvault-cloud/vault-cli
 go 1.25.1
 
 require (
-	github.com/cryptvault-cloud/api v0.2.3
-	github.com/cryptvault-cloud/helper v0.2.0
+	github.com/cryptvault-cloud/api v0.2.4
+	github.com/cryptvault-cloud/helper v0.2.1
 	github.com/urfave/cli/v3 v3.6.2
 	github.com/vektah/gqlparser/v2 v2.5.23
 	go.uber.org/zap v1.26.0
