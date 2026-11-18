@@ -13,7 +13,7 @@ import (
 	_ "embed"
 
 	client "github.com/cryptvault-cloud/api"
-	"github.com/cryptvault-cloud/helper"
+	"github.com/cryptvault-cloud/api/utils"
 	"github.com/cryptvault-cloud/vault-cli/logger"
 	"github.com/urfave/cli/v3"
 	"github.com/vektah/gqlparser/v2/gqlerror"
@@ -263,7 +263,7 @@ func (r *Runner) LocalSelectVault(ctx context.Context, c *cli.Command) error {
 	if err != nil {
 		return err
 	}
-	if helper.Includes[string](vaults, func(s string) bool { return s == vaultName }) {
+	if utils.Includes[string](vaults, func(s string) bool { return s == vaultName }) {
 		return r.fileHandler.SaveTextToFile("/currentVault.txt", vaultName)
 	} else {
 		return fmt.Errorf("vault not found... ")
@@ -318,7 +318,7 @@ func (r *Runner) create_local_identity(ctx context.Context, c *cli.Command) erro
 	if err != nil {
 		return err
 	}
-	b64PubKey, err := helper.NewBase64PublicPem(pubKey)
+	b64PubKey, err := utils.NewBase64PublicPem(pubKey)
 	if err != nil {
 		return err
 	}
@@ -326,7 +326,7 @@ func (r *Runner) create_local_identity(ctx context.Context, c *cli.Command) erro
 	if err != nil {
 		return err
 	}
-	b64PrivKey, err := helper.GetB64FromPrivateKey(privKey)
+	b64PrivKey, err := utils.GetB64FromPrivateKey(privKey)
 	if err != nil {
 		return err
 	}
@@ -346,7 +346,7 @@ func (r *Runner) create_local_identity(ctx context.Context, c *cli.Command) erro
 func (r *Runner) add_identity(ctx context.Context, c *cli.Command) error {
 	private_key_str := c.String(CliAddIdentityLocalPrivateKey)
 	name := c.String(CliAddIdentityLocalName)
-	key, err := helper.GetPrivateKeyFromB64String(private_key_str)
+	key, err := utils.GetPrivateKeyFromB64String(private_key_str)
 	if err != nil {
 		return err
 	}
@@ -358,7 +358,7 @@ func (r *Runner) add_identity(ctx context.Context, c *cli.Command) error {
 	if err != nil {
 		return err
 	}
-	b64PubKey, err := helper.NewBase64PublicPem(&key.PublicKey)
+	b64PubKey, err := utils.NewBase64PublicPem(&key.PublicKey)
 	if err != nil {
 		return err
 	}
@@ -390,11 +390,11 @@ func (r *Runner) create_vault(ctx context.Context, c *cli.Command) error {
 		return err
 	}
 
-	b64PubKey, err := helper.GetB64FromPublicKey(pubKey)
+	b64PubKey, err := utils.GetB64FromPublicKey(pubKey)
 	if err != nil {
 		return err
 	}
-	b64PrivKey, err := helper.GetB64FromPrivateKey(privKey)
+	b64PrivKey, err := utils.GetB64FromPrivateKey(privKey)
 	if err != nil {
 		return err
 	}

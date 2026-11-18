@@ -11,7 +11,7 @@ import (
 	"strings"
 
 	client "github.com/cryptvault-cloud/api"
-	"github.com/cryptvault-cloud/helper"
+	"github.com/cryptvault-cloud/api/utils"
 	"github.com/urfave/cli/v3"
 )
 
@@ -37,7 +37,7 @@ var AllValueType = []ValueType{
 var ValuePatternRegex *regexp.Regexp
 
 func init() {
-	ValuePatternRegex = regexp.MustCompile(helper.ValuePatternRegexStr)
+	ValuePatternRegex = regexp.MustCompile(utils.ValuePatternRegexStr)
 }
 
 func GetProtectedCommand(runner *Runner) *cli.Command {
@@ -93,7 +93,7 @@ func GetProtectedCommand(runner *Runner) *cli.Command {
 									var err error = nil
 									for _, one := range s {
 										if !ValuePatternRegex.Match([]byte(one)) {
-											err = errors.Join(fmt.Errorf("have to match right string pattern: %s", helper.ValuePatternRegexStr))
+											err = errors.Join(fmt.Errorf("have to match right string pattern: %s", utils.ValuePatternRegexStr))
 										}
 									}
 									return err
@@ -230,7 +230,7 @@ func GetProtectedCommand(runner *Runner) *cli.Command {
 									var err error = nil
 									for _, one := range s {
 										if !ValuePatternRegex.Match([]byte(one)) {
-											err = errors.Join(fmt.Errorf("have to match right string pattern: %s", helper.ValuePatternRegexStr))
+											err = errors.Join(fmt.Errorf("have to match right string pattern: %s", utils.ValuePatternRegexStr))
 										}
 									}
 									return err
@@ -245,7 +245,7 @@ func GetProtectedCommand(runner *Runner) *cli.Command {
 									var err error = nil
 									for _, one := range s {
 										if !ValuePatternRegex.Match([]byte(one)) {
-											err = errors.Join(fmt.Errorf("have to match right string pattern: %s", helper.ValuePatternRegexStr))
+											err = errors.Join(fmt.Errorf("have to match right string pattern: %s", utils.ValuePatternRegexStr))
 										}
 									}
 									return err
@@ -314,7 +314,7 @@ func (r *ProtectedRunner) Before(ctx context.Context, c *cli.Command) (context.C
 		}
 		pemKey = t
 	}
-	privKey, err := helper.GetPrivateKeyFromB64String(pemKey)
+	privKey, err := utils.GetPrivateKeyFromB64String(pemKey)
 	if err != nil {
 		return ctx, err
 	}
@@ -352,7 +352,7 @@ func (r *ProtectedRunner) ListAllIdentities(ctx context.Context, c *cli.Command)
 }
 
 func (r *ProtectedRunner) ListRelatedValues(ctx context.Context, c *cli.Command) error {
-	b64pub, err := helper.NewBase64PublicPem(&r.privateKey.PublicKey)
+	b64pub, err := utils.NewBase64PublicPem(&r.privateKey.PublicKey)
 	if err != nil {
 		return err
 	}
@@ -376,7 +376,7 @@ func (r *ProtectedRunner) ListRelatedValues(ctx context.Context, c *cli.Command)
 }
 func (r *ProtectedRunner) AddValue(ctx context.Context, c *cli.Command) error {
 	valueType := c.String(CliAddValueType)
-	if !helper.Includes(AllValueType, func(v ValueType) bool { return valueType == string(v) }) {
+	if !utils.Includes(AllValueType, func(v ValueType) bool { return valueType == string(v) }) {
 		return fmt.Errorf("not allowed Type")
 	}
 	_, err := r.api.AddValue(c.String(CliAddValueName), c.String(CliAddValuePassframe), client.ValueType(valueType))
@@ -390,7 +390,7 @@ func (r *ProtectedRunner) AddValue(ctx context.Context, c *cli.Command) error {
 
 func (r *ProtectedRunner) UpdateValue(ctx context.Context, c *cli.Command) error {
 	valueType := c.String(CliAddValueType)
-	if !helper.Includes(AllValueType, func(v ValueType) bool { return valueType == string(v) }) {
+	if !utils.Includes(AllValueType, func(v ValueType) bool { return valueType == string(v) }) {
 		return fmt.Errorf("not allowed Type")
 	}
 	value, err := r.api.GetValueByName(c.String(CliUpdateValueName))
@@ -457,13 +457,13 @@ func (r *ProtectedRunner) UpdateIdentity(ctx context.Context, c *cli.Command) er
 		}
 		for _, r := range removeRights {
 			r := r
-			containsRight := helper.Contains(currentRights, r, func(value, toCheck *client.RightInput) bool {
+			containsRight := utils.Contains(currentRights, r, func(value, toCheck *client.RightInput) bool {
 				return fmt.Sprintf("(%s)%s", value.Right[:1], value.RightValuePattern) == fmt.Sprintf("(%s)%s", toCheck.Right[:1], toCheck.RightValuePattern)
 			})
 			if !containsRight {
 				return fmt.Errorf("right to remove %s was not found at current identity rights", fmt.Sprintf("(%s)%s", r.Right[:1], r.RightValuePattern))
 			} else {
-				currentRights = helper.Filter(currentRights, func(value *client.RightInput) bool {
+				currentRights = utils.Filter(currentRights, func(value *client.RightInput) bool {
 					return fmt.Sprintf("(%s)%s", value.Right[:1], value.RightValuePattern) != fmt.Sprintf("(%s)%s", r.Right[:1], r.RightValuePattern)
 				})
 			}
@@ -476,7 +476,7 @@ func (r *ProtectedRunner) UpdateIdentity(ctx context.Context, c *cli.Command) er
 		}
 		for _, r := range addRights {
 			r := r
-			containsRight := helper.Contains(currentRights, r, func(value, toCheck *client.RightInput) bool {
+			containsRight := utils.Contains(currentRights, r, func(value, toCheck *client.RightInput) bool {
 				return fmt.Sprintf("(%s)%s", value.Right, value.RightValuePattern) == fmt.Sprintf("(%s)%s", toCheck.Right, toCheck.RightValuePattern)
 			})
 			if !containsRight {
@@ -547,11 +547,11 @@ func (r *ProtectedRunner) AddIdentity(ctx context.Context, c *cli.Command) error
 		if err != nil {
 			return err
 		}
-		b64PubKey, err := helper.GetB64FromPublicKey(res.PublicKey)
+		b64PubKey, err := utils.GetB64FromPublicKey(res.PublicKey)
 		if err != nil {
 			return err
 		}
-		b64PrivKey, err := helper.GetB64FromPrivateKey(res.PrivateKey)
+		b64PrivKey, err := utils.GetB64FromPrivateKey(res.PrivateKey)
 		if err != nil {
 			return err
 		}
@@ -568,7 +568,7 @@ func (r *ProtectedRunner) AddIdentity(ctx context.Context, c *cli.Command) error
 	} else {
 
 		// add identity by given public key
-		pubKey, err := helper.GetPublicKeyFromB64String(b64pubKey)
+		pubKey, err := utils.GetPublicKeyFromB64String(b64pubKey)
 		if err != nil {
 			return err
 		}
@@ -619,7 +619,7 @@ func (r *ProtectedRunner) GetValue(ctx context.Context, c *cli.Command) error {
 }
 
 func (r *ProtectedRunner) GenerateAuthToken(ctx context.Context, c *cli.Command) error {
-	jwt, err := helper.SignJWT(r.privateKey, *r.vaultId)
+	jwt, err := utils.SignJWT(r.privateKey, *r.vaultId)
 	if err != nil {
 		return err
 	}
